@@ -29,6 +29,7 @@ Short version:
 | AI enemy | `AKitEnemy` | Chases player via NavMesh, contact damage with cooldown |
 | AI controller | `AKitAIController` | `MoveToActor` on 0.25 s timer |
 | Game mode | `AKitGameMode` | Shell — set Default Pawn in the Blueprint child |
+| HUD | `WBP_KitHUD` | Health bar + numeric readout, wired to `AKitCharacter` |
 
 Full class reference and extension points: **[docs/WhatIsIncluded.md](docs/WhatIsIncluded.md)**
 
@@ -63,6 +64,8 @@ ArenaKit.uproject
 │   │   ├── BP_KitEnemy             (parent: AKitEnemy)
 │   │   ├── BP_KitProjectile        (parent: AKitProjectile)
 │   │   └── BP_KitGameMode          (parent: AKitGameMode)
+│   ├── UI/
+│   │   └── WBP_KitHUD              (health bar + HP readout — added to viewport in AKitCharacter)
 │   ├── Input/
 │   │   ├── IMC_Default             (Input Mapping Context)
 │   │   ├── IA_Fire                 (Digital bool — Left Mouse Button)
@@ -103,7 +106,8 @@ Replaces `ArenaKit`, `ARENAKIT_API`, and the `AKit` class prefix throughout all 
 
 - No animation (no skeletal mesh, no ABP, no Manny)
 - No death/restart loop — add `AArenaManager` when your project needs it
-- No VFX, no UI, no save system
+- No score, kill counter, or collectable system — those are game design, not foundation
+- No VFX, no save system
 - No Starter Content, no marketplace assets
 
 The template is intentionally thin. Everything above that line is project-specific and belongs in your repo, not here.
@@ -116,3 +120,4 @@ The template is intentionally thin. Everything above that line is project-specif
 |----------|----------|
 | [docs/QuickStart.md](docs/QuickStart.md) | Full setup walkthrough from clone to first Play |
 | [docs/WhatIsIncluded.md](docs/WhatIsIncluded.md) | Class reference, component details, extension points |
+| [docs/StarterTemplate.md](docs/StarterTemplate.md) | Rationale, scope decisions, verification checklist |

@@ -11,8 +11,8 @@ AKitProjectile::AKitProjectile()
 
     CollisionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionSphere"));
     CollisionSphere->InitSphereRadius(15.f);
-    CollisionSphere->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-    CollisionSphere->OnComponentHit.AddDynamic(this, &AKitProjectile::OnHit);
+    CollisionSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+    CollisionSphere->OnComponentBeginOverlap.AddDynamic(this, &AKitProjectile::OnOverlap);
     SetRootComponent(CollisionSphere);
 
     Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
@@ -27,12 +27,14 @@ AKitProjectile::AKitProjectile()
     InitialLifeSpan = 3.f;
 }
 
-void AKitProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
-    UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AKitProjectile::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (OtherActor && OtherActor != GetInstigator())
+    if (!OtherActor || OtherActor == GetInstigator())
     {
-        OtherActor->TakeDamage(Damage, FDamageEvent(), GetInstigatorController(), this);
+        return;
     }
+
+    OtherActor->TakeDamage(Damage, FDamageEvent(), GetInstigatorController(), this);
     Destroy();
 }

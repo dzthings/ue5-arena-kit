@@ -65,15 +65,17 @@ AI pawn that chases the player and deals contact damage on overlap.
 **Base:** `AActor`  
 **Blueprint wrapper:** `BP_KitProjectile`
 
-Physics-driven projectile with hit-on-impact damage.
+Physics-driven projectile with overlap-based damage.
 
 | Feature | Detail |
 |---------|--------|
-| Collision | `USphereComponent` (15r), `BlockAllDynamic`; binds `OnHit` |
+| Collision | `USphereComponent` (15r), `OverlapAllDynamic`; binds `OnOverlap` |
 | Mesh | `UStaticMeshComponent`, `NoCollision` |
 | Movement | `UProjectileMovementComponent`, 1500 units/s, zero gravity |
-| Damage | Calls `TakeDamage` on the hit actor; skips the instigator |
-| Lifespan | 3 s; destroys on any hit |
+| Damage | Calls `TakeDamage` on the overlapped actor; skips the instigator |
+| Lifespan | 3 s; destroys on first qualifying overlap |
+
+> **Why overlap, not block:** `BlockAllDynamic` + `OnHit` failed silently when a projectile spawned inside a close enemy's capsule — the movement component entered penetration-pushout mode and never fired `OnHit`. `OverlapAllDynamic` + `OnComponentBeginOverlap` fires even when the projectile starts overlapping, so point-blank shots register correctly. Trade-off: projectiles no longer physically deflect off world geometry — they pass through walls. Add a separate `WorldStatic` block channel if wall deflection is needed.
 
 **Extension points:**
 - Adjust `Damage`, speed, and lifespan in `BP_KitProjectile`
@@ -85,7 +87,7 @@ Physics-driven projectile with hit-on-impact damage.
 
 **Base:** `AAIController`
 
-Polls `MoveToActor` toward the player pawn every 0.25 s using the NavMesh.
+Polls `MoveToActor` toward the player pawn every 0.25 s using the NavMesh. Acceptance radius is 150 units — enemies stop before overlapping the player capsule.
 
 **Extension points:**
 - Reduce poll interval for more reactive tracking

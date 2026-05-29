@@ -19,6 +19,6 @@ void AKitAIController::UpdateMovement()
 {
     if (APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0))
     {
-        MoveToActor(PlayerPawn, 50.f);
+        MoveToActor(PlayerPawn, 150.f);
     }
 }

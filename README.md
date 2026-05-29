@@ -25,7 +25,7 @@ Short version:
 | System | C++ Class | Details |
 |--------|-----------|---------|
 | Player character | `AKitCharacter` | WASD + left stick, cursor + right stick aim, fire rate, death→restart |
-| Projectile | `AKitProjectile` | Physics-driven, damage on hit, 3 s lifespan |
+| Projectile | `AKitProjectile` | Physics-driven, overlap-based damage, 3 s lifespan |
 | AI enemy | `AKitEnemy` | Chases player via NavMesh, contact damage with cooldown |
 | AI controller | `AKitAIController` | `MoveToActor` on 0.25 s timer |
 | Game mode | `AKitGameMode` | Death→restart loop, configurable delay |

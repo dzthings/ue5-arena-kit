@@ -92,4 +92,5 @@ Place:
 
 ## What's next
 
-See [WhatIsIncluded.md](WhatIsIncluded.md) for the full class reference and extension points.
+See [WhatIsIncluded.md](WhatIsIncluded.md) for the full class reference and extension points.  
+Back to [README](../README.md).

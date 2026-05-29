@@ -125,3 +125,7 @@ If any path is wrong, movement or fire silently fails. Check the Output Log on P
 | Any marketplace / Fab content | Add per-project, never to the template |
 | Death/restart loop | Lives in `AArenaManager`; add it when you need it |
 | Damage numbers, VFX | Game feel pass, not foundation |
+
+---
+
+Back to [README](../README.md) · [QuickStart](QuickStart.md)

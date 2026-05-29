@@ -1,6 +1,6 @@
 # ArenaKit — Quick Start
 
-Get from clone to playable in under 10 minutes.
+Get from clone to playable in under 5 minutes.
 
 ---
 
@@ -8,7 +8,7 @@ Get from clone to playable in under 10 minutes.
 
 - Unreal Engine 5.7 installed via the Epic Games Launcher
 - JetBrains Rider for Unreal **or** Visual Studio 2022 with the Unreal Engine workload
-- Git
+- Git with Git LFS (`git lfs install` if not already set up)
 
 ---
 
@@ -21,6 +21,8 @@ Name it whatever your project is called. Clone it locally.
 git clone https://github.com/<you>/<your-project>.git
 cd <your-project>
 ```
+
+Blueprint wrappers, input assets, and the arena level are all committed — no manual Content setup required.
 
 ---
 
@@ -44,54 +46,7 @@ When UE asks to rebuild modules, click **Yes**.
 
 ---
 
-## 4. Create the Content layer (one-time setup)
-
-The C++ is complete; the Blueprint wrappers and input assets need to be created in the editor. Do this once per project clone — it takes about 5 minutes.
-
-### Input assets
-
-| Asset | Type | Path |
-|-------|------|------|
-| `IA_Move` | Input Action — Axis2D (Vector2D) | `Content/Input/Actions/IA_Move` |
-| `IA_Aim` | Input Action — Axis2D (Vector2D) | `Content/Input/Actions/IA_Aim` |
-| `IA_Fire` | Input Action — Digital (bool) | `Content/Input/IA_Fire` |
-| `IA_Quit` | Input Action — Digital (bool) | `Content/Input/IA_Quit` |
-| `IMC_Default` | Input Mapping Context | `Content/Input/IMC_Default` |
-
-`IMC_Default` mappings:
-
-| Action | KB+M | Gamepad |
-|--------|------|---------|
-| `IA_Move` | W/A/S/D (with Swizzle/Negate modifiers) | Left stick |
-| `IA_Aim` | — | Right stick |
-| `IA_Fire` | Left mouse button | Right trigger |
-| `IA_Quit` | Escape | Start / Menu button |
-
-### Blueprints
-
-| Blueprint | Parent C++ Class | Notes |
-|-----------|-----------------|-------|
-| `BP_KitCharacter` | `AKitCharacter` | Assign `/Engine/BasicShapes/Cube` to mesh; set `ProjectileClass = BP_KitProjectile` |
-| `BP_KitProjectile` | `AKitProjectile` | Assign `/Engine/BasicShapes/Sphere` to mesh |
-| `BP_KitEnemy` | `AKitEnemy` | Assign any mesh to BodyMesh |
-| `BP_KitGameMode` | `AKitGameMode` | Set Default Pawn Class = `BP_KitCharacter` |
-
-In **Project Settings → Maps & Modes**, set Default GameMode to `BP_KitGameMode`.
-
-### Level
-
-Create `Content/Maps/L_ArenaKit`. Set it as the default map in Project Settings.
-
-Place:
-- **PlayerStart** — center of the floor
-- **NavMeshBoundsVolume** — covers the playable area; press **Build → Build Paths** to bake
-- One `AKitEnemySpawner` actor — set `EnemyClass = BP_KitEnemy`, adjust `SpawnCount` and `SpawnRadius`
-- A large floor: **Add Actor → Cube**, scale to (20, 20, 0.5)
-- 4–6 obstacle cubes (pillars or crates) so the NavMesh has geometry to path around
-
----
-
-## 5. Hit Play
+## 4. Hit Play
 
 - WASD moves the character
 - Mouse rotates the character to face the cursor

@@ -15,8 +15,7 @@ Short version:
 1. Click **"Use this template"** on GitHub → create your repo → clone it
 2. *(Optional)* `.\Tools\Rename-Module.ps1 -NewName YourGame` to rename the module
 3. Open `ArenaKit.uproject` in UE5 → click **Yes** to rebuild
-4. Create the Blueprint wrappers and input assets in the editor (one-time, ~5 min — see QuickStart)
-5. Hit Play
+4. Hit Play
 
 ---
 

@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/SceneComponent.h"
 #include "KitEnemySpawner.generated.h"
 
 UCLASS()
@@ -14,6 +15,9 @@ public:
 
 protected:
     virtual void BeginPlay() override;
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<USceneComponent> Root;
 
     // Enemy class to spawn. Set to BP_KitEnemy (or a subclass) in the level.
     UPROPERTY(EditAnywhere, Category = "Spawner")

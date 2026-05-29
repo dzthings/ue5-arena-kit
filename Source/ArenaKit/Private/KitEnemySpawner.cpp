@@ -5,6 +5,9 @@
 AKitEnemySpawner::AKitEnemySpawner()
 {
     PrimaryActorTick.bCanEverTick = false;
+
+    Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+    SetRootComponent(Root);
 }
 
 void AKitEnemySpawner::BeginPlay()

@@ -11,13 +11,15 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputActionValue.h"
+#include "KitGameMode.h"
+#include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 
 AKitCharacter::AKitCharacter()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    // Don't let the controller rotate the character — we aim via cursor.
+    // Don't let the controller rotate the character — we aim via cursor or right stick.
     bUseControllerRotationYaw   = false;
     bUseControllerRotationPitch = false;
     bUseControllerRotationRoll  = false;
@@ -29,11 +31,13 @@ AKitCharacter::AKitCharacter()
 
     SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
     SpringArm->SetupAttachment(GetCapsuleComponent());
-    SpringArm->TargetArmLength = 1200.f;
-    SpringArm->SetRelativeRotation(FRotator(-60.f, 0.f, 0.f));
-    SpringArm->bDoCollisionTest = false;
+    SpringArm->TargetArmLength = CameraArmLength;
+    SpringArm->SetRelativeRotation(FRotator(CameraPitch, 0.f, 0.f));
+    SpringArm->bDoCollisionTest      = false;
+    SpringArm->bEnableCameraLag      = true;
+    SpringArm->CameraLagSpeed        = 8.f;
 
-    // Camera stays fixed; only the character mesh rotates toward the cursor.
+    // Camera stays fixed; only the character mesh rotates toward aim direction.
     SpringArm->SetUsingAbsoluteRotation(true);
     SpringArm->bUsePawnControlRotation = false;
     SpringArm->bInheritPitch           = false;
@@ -53,9 +57,27 @@ AKitCharacter::AKitCharacter()
         TEXT("/Game/Input/Actions/IA_Move"));
     if (MoveFinder.Succeeded()) MoveAction = MoveFinder.Object;
 
+    static ConstructorHelpers::FObjectFinder<UInputAction> AimFinder(
+        TEXT("/Game/Input/Actions/IA_Aim"));
+    if (AimFinder.Succeeded()) AimAction = AimFinder.Object;
+
     static ConstructorHelpers::FObjectFinder<UInputAction> FireFinder(
         TEXT("/Game/Input/IA_Fire"));
     if (FireFinder.Succeeded()) FireAction = FireFinder.Object;
+
+    static ConstructorHelpers::FObjectFinder<UInputAction> QuitFinder(
+        TEXT("/Game/Input/IA_Quit"));
+    if (QuitFinder.Succeeded()) QuitAction = QuitFinder.Object;
+}
+
+void AKitCharacter::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
+
+    // Sync Blueprint-editable camera properties to the spring arm.
+    // Fires whenever a property is changed in the Blueprint editor.
+    SpringArm->TargetArmLength = CameraArmLength;
+    SpringArm->SetRelativeRotation(FRotator(CameraPitch, 0.f, 0.f));
 }
 
 void AKitCharacter::BeginPlay()
@@ -85,6 +107,15 @@ void AKitCharacter::BeginPlay()
 void AKitCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+
+    // Right stick takes priority; fall back to cursor ray when stick is neutral.
+    if (AimValue.SizeSquared() > 0.1f)
+    {
+        // Stick Y (forward/back on screen) → world X; stick X (left/right) → world Y.
+        const FVector AimDir(AimValue.Y, AimValue.X, 0.f);
+        SetActorRotation(FRotator(0.f, AimDir.Rotation().Yaw, 0.f));
+        return;
+    }
 
     APlayerController* PC = Cast<APlayerController>(GetController());
     if (!PC)
@@ -128,7 +159,6 @@ void AKitCharacter::Tick(float DeltaSeconds)
         return;
     }
 
-    // Rotate the whole character to face the cursor; camera is decoupled (absolute rotation).
     SetActorRotation(FRotator(0.f, ToTarget.Rotation().Yaw, 0.f));
 }
 
@@ -147,9 +177,20 @@ void AKitCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
         EIC->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AKitCharacter::Move);
     }
 
+    if (AimAction)
+    {
+        EIC->BindAction(AimAction, ETriggerEvent::Triggered, this, &AKitCharacter::Aim);
+        EIC->BindAction(AimAction, ETriggerEvent::Completed, this, &AKitCharacter::AimReleased);
+    }
+
     if (FireAction)
     {
         EIC->BindAction(FireAction, ETriggerEvent::Started, this, &AKitCharacter::Fire);
+    }
+
+    if (QuitAction)
+    {
+        EIC->BindAction(QuitAction, ETriggerEvent::Started, this, &AKitCharacter::Quit);
     }
 }
 
@@ -165,6 +206,11 @@ float AKitCharacter::TakeDamage(float DamageAmount, const FDamageEvent& DamageEv
     if (CurrentHealth <= 0.f)
     {
         UE_LOG(LogTemp, Warning, TEXT("Player died."));
+
+        if (AKitGameMode* GM = Cast<AKitGameMode>(UGameplayStatics::GetGameMode(this)))
+        {
+            GM->NotifyPlayerDied();
+        }
     }
 
     return Applied;
@@ -177,25 +223,48 @@ void AKitCharacter::Move(const FInputActionValue& Value)
     AddMovementInput(FVector::RightVector,   Axis.X);
 }
 
+void AKitCharacter::Aim(const FInputActionValue& Value)
+{
+    AimValue = Value.Get<FVector2D>();
+}
+
+void AKitCharacter::AimReleased(const FInputActionValue& Value)
+{
+    AimValue = FVector2D::ZeroVector;
+}
+
 void AKitCharacter::Fire()
 {
-    if (!ProjectileClass)
+    if (!ProjectileClass || !bCanFire)
     {
         return;
     }
 
-    // Prefer a named socket on the skeletal mesh ("muzzle"); fall back to forward offset.
+    bCanFire = false;
+    GetWorldTimerManager().SetTimer(FireCooldownTimer, this, &AKitCharacter::ResetFireCooldown, FireRate, false);
+
     const USkeletalMeshComponent* SkelMesh = GetMesh();
     const FVector MuzzleLocation = (SkelMesh && SkelMesh->DoesSocketExist(FName("muzzle")))
         ? SkelMesh->GetSocketLocation(FName("muzzle"))
         : GetActorLocation() + GetActorForwardVector() * MuzzleOffset;
 
-    const FRotator SpawnRotation = GetActorRotation();
-
     FActorSpawnParameters SpawnParams;
-    SpawnParams.Owner     = this;
+    SpawnParams.Owner      = this;
     SpawnParams.Instigator = this;
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-    GetWorld()->SpawnActor<AActor>(ProjectileClass, MuzzleLocation, SpawnRotation, SpawnParams);
+    GetWorld()->SpawnActor<AActor>(ProjectileClass, MuzzleLocation, GetActorRotation(), SpawnParams);
+}
+
+void AKitCharacter::Quit()
+{
+    if (APlayerController* PC = Cast<APlayerController>(GetController()))
+    {
+        PC->ConsoleCommand(TEXT("quit"));
+    }
+}
+
+void AKitCharacter::ResetFireCooldown()
+{
+    bCanFire = true;
 }

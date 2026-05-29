@@ -53,10 +53,19 @@ The C++ is complete; the Blueprint wrappers and input assets need to be created 
 | Asset | Type | Path |
 |-------|------|------|
 | `IA_Move` | Input Action — Axis2D (Vector2D) | `Content/Input/Actions/IA_Move` |
+| `IA_Aim` | Input Action — Axis2D (Vector2D) | `Content/Input/Actions/IA_Aim` |
 | `IA_Fire` | Input Action — Digital (bool) | `Content/Input/IA_Fire` |
+| `IA_Quit` | Input Action — Digital (bool) | `Content/Input/IA_Quit` |
 | `IMC_Default` | Input Mapping Context | `Content/Input/IMC_Default` |
 
-`IMC_Default` mappings: `IA_Move` → W (Forward), S (Forward + Negate), A (Right + Swizzle + Negate), D (Right + Swizzle). `IA_Fire` → Left Mouse Button.
+`IMC_Default` mappings:
+
+| Action | KB+M | Gamepad |
+|--------|------|---------|
+| `IA_Move` | W/A/S/D (with Swizzle/Negate modifiers) | Left stick |
+| `IA_Aim` | — | Right stick |
+| `IA_Fire` | Left mouse button | Right trigger |
+| `IA_Quit` | Escape | Start / Menu button |
 
 ### Blueprints
 
@@ -76,8 +85,9 @@ Create `Content/Maps/L_ArenaKit`. Set it as the default map in Project Settings.
 Place:
 - **PlayerStart** — center of the floor
 - **NavMeshBoundsVolume** — covers the playable area; press **Build → Build Paths** to bake
-- One or two `BP_KitEnemy` actors (Z = 80 so they sit on the floor)
+- One `AKitEnemySpawner` actor — set `EnemyClass = BP_KitEnemy`, adjust `SpawnCount` and `SpawnRadius`
 - A large floor: **Add Actor → Cube**, scale to (20, 20, 0.5)
+- 4–6 obstacle cubes (pillars or crates) so the NavMesh has geometry to path around
 
 ---
 

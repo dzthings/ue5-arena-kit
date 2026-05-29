@@ -24,11 +24,12 @@ Short version:
 
 | System | C++ Class | Details |
 |--------|-----------|---------|
-| Player character | `AKitCharacter` | WASD movement, overhead camera, cursor-aim, fire |
+| Player character | `AKitCharacter` | WASD + left stick, cursor + right stick aim, fire rate, death→restart |
 | Projectile | `AKitProjectile` | Physics-driven, damage on hit, 3 s lifespan |
 | AI enemy | `AKitEnemy` | Chases player via NavMesh, contact damage with cooldown |
 | AI controller | `AKitAIController` | `MoveToActor` on 0.25 s timer |
-| Game mode | `AKitGameMode` | Shell — set Default Pawn in the Blueprint child |
+| Game mode | `AKitGameMode` | Death→restart loop, configurable delay |
+| Enemy spawner | `AKitEnemySpawner` | Maintains live enemy count, NavMesh-aware spawn, auto-respawn on death |
 | HUD | `WBP_KitHUD` | Health bar + numeric readout, wired to `AKitCharacter` |
 
 Full class reference and extension points: **[docs/WhatIsIncluded.md](docs/WhatIsIncluded.md)**
@@ -50,13 +51,15 @@ ArenaKit.uproject
 │       │   ├── KitEnemy.h
 │       │   ├── KitProjectile.h
 │       │   ├── KitAIController.h
-│       │   └── KitGameMode.h
+│       │   ├── KitGameMode.h
+│       │   └── KitEnemySpawner.h
 │       └── Private/
 │           ├── KitCharacter.cpp
 │           ├── KitEnemy.cpp
 │           ├── KitProjectile.cpp
 │           ├── KitAIController.cpp
-│           └── KitGameMode.cpp
+│           ├── KitGameMode.cpp
+│           └── KitEnemySpawner.cpp
 │
 ├── Content/                        ← created / populated in the UE Editor
 │   ├── Blueprints/

@@ -18,6 +18,7 @@ class ARENAKIT_API AKitCharacter : public ACharacter
 public:
     AKitCharacter();
 
+    virtual void OnConstruction(const FTransform& Transform) override;
     virtual void Tick(float DeltaSeconds) override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
     virtual float TakeDamage(float DamageAmount, const struct FDamageEvent& DamageEvent,
@@ -32,6 +33,13 @@ protected:
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UCameraComponent> Camera;
 
+    // Change these in BP_KitCharacter's Details panel — OnConstruction syncs them to the spring arm.
+    UPROPERTY(EditDefaultsOnly, Category = "Camera")
+    float CameraArmLength = 1200.f;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Camera")
+    float CameraPitch = -60.f;
+
     UPROPERTY(VisibleAnywhere, Category = "Input")
     TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
@@ -39,7 +47,13 @@ protected:
     TObjectPtr<UInputAction> MoveAction;
 
     UPROPERTY(VisibleAnywhere, Category = "Input")
+    TObjectPtr<UInputAction> AimAction;
+
+    UPROPERTY(VisibleAnywhere, Category = "Input")
     TObjectPtr<UInputAction> FireAction;
+
+    UPROPERTY(VisibleAnywhere, Category = "Input")
+    TObjectPtr<UInputAction> QuitAction;
 
     UPROPERTY(EditAnywhere, Category = "Movement")
     float MoveSpeed = 600.f;
@@ -53,9 +67,20 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Combat")
     float MaxHealth = 100.f;
 
+    UPROPERTY(EditAnywhere, Category = "Combat")
+    float FireRate = 0.2f;
+
     float CurrentHealth;
 
 private:
     void Move(const FInputActionValue& Value);
+    void Aim(const FInputActionValue& Value);
+    void AimReleased(const FInputActionValue& Value);
     void Fire();
+    void Quit();
+    void ResetFireCooldown();
+
+    FVector2D AimValue;
+    bool bCanFire = true;
+    FTimerHandle FireCooldownTimer;
 };
